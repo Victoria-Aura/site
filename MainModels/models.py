@@ -1,20 +1,47 @@
 from django.db import models
 
-# Create your models here.
-
-
+from django.contrib.auth.models import AbstractUser
 
 
 def path_ava(instance, filename):
-    return '/'.join(['ava', str(instance.img_id), filename])
-class Gallery(models.Model):
-    img_id = models.AutoField(primary_key=True)
-    file = models.ImageField(upload_to=path_ava)
-
-class Countrys(models.Model):
+    return '/'.join(['ava', str(instance.id), filename])
+class Countries(models.Model):
     name = models.CharField(max_length=100)
-
-class User(models.Model):
+    @classmethod
+    def get_default_pk(cls):
+        exam, created = cls.objects.get_or_create(
+            name='default exam', 
+        )
+        return exam.pk
+class GameDiscipline(models.Model):
+    name = models.CharField(max_length=100)
+    ava = models.ImageField(upload_to=path_ava)
+    @classmethod
+    def get_default_pk(cls):
+        exam, created = cls.objects.get_or_create(
+            name='default exam', 
+        )
+        return exam.pk
+    def __str__(self):
+        return self.name
+class Team(models.Model):
+    name = models.CharField(max_length=100)
+    short_name = models.CharField(max_length=5)
+    ava = models.ImageField(upload_to=path_ava)
+    users = models.ManyToManyField('User',related_name='users',blank=True)
+    tournaments = models.ManyToManyField('Tournament',blank=True)
+    @classmethod
+    def get_default_pk(cls):
+        exam, created = cls.objects.get_or_create(
+            name='default exam', 
+        )
+        return exam.pk
+    def __str__(self) -> str:
+        return self.name
+    class Meta:
+        verbose_name = 'Команда'
+        verbose_name_plural = 'Команды'
+class User(AbstractUser):
     COACH = 'CO'
     MANAGER = 'MA'
     CAPTAIN = 'CA'
@@ -25,16 +52,13 @@ class User(models.Model):
         (COACH,'Coach'),
         (MANAGER,'Manager') 
     ]
-    country = models.ForeignKey(Countrys,on_delete=models.CASCADE)
-    date_of_becoming_an_esportsman = models.DateField(auto_now=False, auto_now_add=False)
-    main_game = models.ForeignKey('GameDiscipline',on_delete=models.CASCADE)
+    country = models.ForeignKey(Countries,on_delete=models.CASCADE,default=Countries.get_default_pk)
+    date_of_becoming_an_esportsman = models.DateField(auto_now=True, auto_now_add=False,blank=True)
+    main_game = models.ForeignKey(GameDiscipline,on_delete=models.CASCADE,default=GameDiscipline.get_default_pk)
     name = models.CharField(max_length=100)
-    team = models.ForeignKey('Team',on_delete=models.CASCADE)
-    ava = models.ForeignKey(Gallery,on_delete=models.CASCADE)
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    age = models.PositiveSmallIntegerField()
-    email = models.EmailField()
+    team = models.ForeignKey(Team,on_delete=models.CASCADE,related_name='team',default=Team.get_default_pk)
+    ava = models.ImageField(upload_to=path_ava)
+    age = models.IntegerField(default=0)
     info = models.TextField(blank=True)
     type_user = models.CharField(
         max_length=2,
@@ -42,29 +66,8 @@ class User(models.Model):
         default=PLAYER,
     )
     def __str__(self) -> str:
-        return self.name
+        return self.username
 
-    class Meta:
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользовательли'
-
-class Team(models.Model):
-    name = models.CharField(max_length=100)
-    short_name = models.CharField(max_length=5)
-    ava = models.ForeignKey(Gallery,on_delete=models.CASCADE)
-    users = models.ManyToManyField(User)
-    tournaments = models.ManyToManyField('Tournament',blank=True)
-    def __str__(self) -> str:
-        return self.name
-    class Meta:
-        verbose_name = 'Команда'
-        verbose_name_plural = 'Команды'
-
-class GameDiscipline(models.Model):
-    name = models.CharField(max_length=100)
-    ava = models.ForeignKey(Gallery,on_delete=models.CASCADE)
-    def __str__(self):
-        return self.name
 class Match(models.Model):
     teams = models.ManyToManyField(Team,related_name='teams')
     winner = models.ForeignKey(Team,null=True,on_delete=models.CASCADE,related_name='winner')
@@ -77,7 +80,7 @@ class Match(models.Model):
         return f'{self.id}'
 class Tournament(models.Model):
     name = models.CharField(max_length=100)
-    ava = models.ForeignKey(Gallery,on_delete=models.CASCADE)
+    ava = models.ImageField(upload_to=path_ava)
     teams = models.ManyToManyField(Team)
     data_start = models.DateField()
     data_end = models.DateField()
