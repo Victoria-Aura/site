@@ -29,6 +29,7 @@ class User(models.Model):
     date_of_becoming_an_esportsman = models.DateField(auto_now=False, auto_now_add=False)
     main_game = models.ForeignKey('GameDiscipline',on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
+    team = models.ForeignKey('Team',on_delete=models.CASCADE)
     ava = models.ForeignKey(Gallery,on_delete=models.CASCADE)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
