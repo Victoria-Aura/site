@@ -37,10 +37,14 @@ class Countries(models.Model):
         return f'c_{self.name}'
 class GameDiscipline(models.Model):
     name = models.CharField(max_length=100)
-    ava = models.ForeignKey(ImgFiles,on_delete=models.CASCADE,null=True)
+    img = models.ForeignKey(ImgFiles,on_delete=models.CASCADE,null=True)
     text_info = models.TextField()
+    slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL",null=True)
     def __str__(self):
         return f'g_{self.name}'
+    class Meta:
+        verbose_name = 'Игровая дисциплина'
+        verbose_name_plural = 'Игровые дисциплины'
 class Team(models.Model):
     name = models.CharField(max_length=100)
     short_name = models.CharField(max_length=5)
